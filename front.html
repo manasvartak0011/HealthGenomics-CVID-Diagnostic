@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVID Diagnostic Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .btn-warning {
+            background: #f39c12;
+        }
+        
+        .btn-warning:hover {
+            background: #e67e22;
+        }
+        
+        .result-container {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .result-box {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background: white;
+            border-left: 5px solid #27ae60;
+        }
+        
+        .cvid-result {
+            border-left-color: #e74c3c;
+        }
+        
+        .result-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .confidence-bar {
+            height: 10px;
+            background: #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .confidence-level {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s;
+            background: #27ae60;
+        }
+        
+        .recommendations {
+            margin-top: 20px;
+        }
+        
+        .recommendations ul {
+            padding-left: 20px;
+        }
+        
+        .recommendations li {
+            margin-bottom: 8px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .footer {
+            text-align: center;
+            color: #7f8c8d;
+            margin-top: 30px;
+            padding: 20px;
+            border-top: 1px solid #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HealthGenomics CVID Diagnostic</h1>
+            <p>Common Variable Immunodeficiency Classification Tool</p>
+        </header>
+        
+        <div class="content">
+            <div class="card">
+                <h2>Gene Expression Analysis</h2>
+                <p>Enter gene expression values for immune-related genes:</p>
+                
+                <div class="input-grid" id="gene-inputs">
+                    <!-- Gene inputs will be generated here -->
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-block" id="analyze-btn">Analyze Gene Expression</button>
+                    <button class="btn btn-warning" id="sample-btn">Load Sample Data</button>
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing gene expression patterns...</p>
+            </div>
+            
+            <div class="result-container" id="result-container">
+                <div class="card">
+                    <h2>Diagnostic Results</h2>
+                    
+                    <div id="binary-result">
+                        <!-- Results will appear here -->
+                    </div>
+                    
+                    <div id="multiclass-result">
+                        <!-- Subtype results will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>HealthGenomics CVID Diagnostic Tool &copy; 2023 | For Research Use</p>
+        </div>
+    </div>
+
+    <script>
+        let featureNames = [];
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchFeatures();
+            document.getElementById('analyze-btn').addEventListener('click', analyzeGenes);
+            document.getElementById('sample-btn').addEventListener('click', loadSampleData);
+        });
+        
+        // Fetch available gene features from backend
+        function fetchFeatures() {
+            fetch('http://localhost:5000/features')
+                .then(response => response.json())
+                .then(data => {
+                    featureNames = data.features;
+                    renderGeneInputs();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Fallback to default features
+                    featureNames = ['TAP1', 'PSMB10', 'IFNGR2', 'STAT1', 'WAS', 'CYBA', 'NCF1', 'IL7R', 'NFKBIA', 'STAT2'];
+                    renderGeneInputs();
+                    alert('Backend not available. Using default genes.');
+                });
+        }
+        
+        // Render gene input fields
+        function renderGeneInputs() {
+            const container = document.getElementById('gene-inputs');
+            container.innerHTML = '';
+            
+            featureNames.forEach(gene => {
+                const div = document.createElement('div');
+                div.className = 'form-group';
+                div.innerHTML = `
+                    <label for="${gene}">${gene}</label>
+                    <input type="number" id="${gene}" step="any" placeholder="Expression value">
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        // Load sample data
+        function loadSampleData() {
+            featureNames.forEach(gene => {
+                const input = document.getElementById(gene);
+                const value = (Math.random() * 9000 + 1000).toFixed(2);
+                input.value = value;
+            });
+        }
+        
+        // Analyze gene expression
+        function analyzeGenes() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result-container').style.display = 'none';
+            
+            const geneData = {};
+            let valid = true;
+            
+            featureNames.forEach(gene => {
+                const input = document.getElementById(gene);
+                const value = parseFloat(input.value);
+                
+                if (isNaN(value)) {
+                    valid = false;
+                    input.style.borderColor = 'red';
+                } else {
+                    geneData[gene] = value;
+                    input.style.borderColor = '';
+                }
+            });
+            
+            if (!valid) {
+                document.getElementById('loading').style.display = 'none';
+                alert('Please fill all fields with valid numbers.');
+                return;
+            }
+            
+            fetch('http://localhost:5000/predict', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(geneData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                displayResults(data);
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                alert('Error: ' + error.message);
+            });
+        }
+        
+        // Display results
+        function displayResults(data) {
+            const container = document.getElementById('result-container');
+            const binaryResult = document.getElementById('binary-result');
+            const multiclassResult = document.getElementById('multiclass-result');
+            
+            container.style.display = 'block';
+            
+            const isHealthy = data.binary_prediction === 'Healthy';
+            const confidence = (data.binary_confidence * 100).toFixed(1);
+            
+            binaryResult.innerHTML = `
+                <div class="result-box ${isHealthy ? '' : 'cvid-result'}">
+                    <div class="result-title">
+                        ${isHealthy ? '✅ Healthy Profile' : '⚠️ CVID Detected'}
+                    </div>
+                    <p>Classification: <strong>${data.binary_prediction}</strong></p>
+                    <div class="confidence-bar">
+                        <div class="confidence-level" style="width: ${confidence}%"></div>
+                    </div>
+                    <p>Confidence: <strong>${confidence}%</strong></p>
+                </div>
+            `;
+            
+            if (!isHealthy && data.multiclass_prediction !== 'N/A') {
+                const multiConfidence = (data.multiclass_confidence * 100).toFixed(1);
+                multiclassResult.innerHTML = `
+                    <div class="result-box">
+                        <div class="result-title">🔍 CVID Subtype: ${data.multiclass_prediction}</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-level" style="width: ${multiConfidence}%"></div>
+                        </div>
+                        <p>Subtype Confidence: <strong>${multiConfidence}%</strong></p>
+                        <div class="recommendations">
+                            <h3>Recommendations:</h3>
+                            <ul>
+                                ${data.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } else {
+                multiclassResult.innerHTML = '';
+            }
+        }
+    </script>
+</body>
+</html>
